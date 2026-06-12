@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Referential for Shipments</title>
+
+    <!-- Barcode Library -->
+    <script src="https://unpkg.com/bwip-js@4.8.0/dist/bwip-js.min.js"></script>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2f5f8f;
+            --success: #198754;
+            --success-dark: #146c43;
+            --info: #2563eb;
+            --info-dark: #1d4ed8;
+            --danger: #b42318;
+            --bg: #eef2f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #d7dee8;
+            --soft-blue: #f0f6ff;
+            --soft-red: #fff4f2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(47, 95, 143, 0.14), transparent 30%),
+                linear-gradient(135deg, #eef2f6 0%, #dbe3ec 100%);
+            margin: 0;
+            padding: 22px;
+            min-height: 100vh;
+            display: flex;
+            gap: 22px;
+            color: var(--text);
+        }
+
+        /* =========================
+           CONTROL PANEL
+        ========================== */
+        .control-panel {
+            width: 380px;
+            height: calc(100vh - 44px);
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(215, 222, 232, 0.9);
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 22px 22px 18px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .panel-header .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.82;
+            margin-bottom: 4px;
+        }
+
+        .panel-header h1 {
+            font-size: 21px;
+            line-height: 1.25;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .panel-header p {
+            margin: 8px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .panel-body {
+            padding: 18px 18px 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .section-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 15px;
+            margin-bottom: 14px;
+        }
+
+        .section-card.important {
+            background: var(--soft-red);
+            border-color: #f1b5ad;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .section-card.important .section-title {
+            color: var(--danger);
+        }
+
+        .section-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: var(--primary);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .section-card.important .section-number {
+            background: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .hint {
+            font-weight: 400;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #ffffff;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.18s ease;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 58px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(47, 95, 143, 0.12);
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 14px 0 16px;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, var(--success), #20a36a);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            background: linear-gradient(135deg, var(--success-dark), var(--success));
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, var(--info), #3b82f6);
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: linear-gradient(135deg, var(--info-dark), var(--info));
+        }
+
+        .summary-box {
+            background: var(--soft-blue);
+            border: 1px solid #c6dbff;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+            color: #1e3a5f;
+            line-height: 1.5;
+        }
+
+        .summary-box b {
+            color: #0f2742;
+        }
+
+        .footer-credit {
+            padding: 16px 18px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.55;
+            background: #f8fafc;
+        }
+
+        .footer-credit b {
+            color: var(--primary);
+        }
+
+        /* =========================
+           PREVIEW AREA
+        ========================== */
+        .preview-area {
+            flex: 1;
+            min-width: 0;
+            height: calc(100vh - 44px);
+            overflow-y: auto;
+            background:
+                linear-gradient(45deg, rgba(148, 163, 184, 0.15) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(148, 163, 184, 0.15) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(148, 163, 184, 0.15) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(148, 163, 184, 0.15) 75%);
+            background-size: 26px 26px;
+            background-position: 0 0, 0 13px, 13px -13px, -13px 0;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 26px;
+        }
+
+        .empty-state {
+            margin-top: 70px;
+            max-width: 460px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .empty-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            background: var(--soft-blue);
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h2 {
+            margin: 0 0 6px;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .empty-state p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* =========================
+           LABEL CSS
+        ========================== */
+        .label-container {
+            width: 4in;
+            height: 10in;
+            background-color: white;
+            padding: 0;
+            box-sizing: border-box;
+            border: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            font-family: Arial, Helvetica, sans-serif;
+            color: black;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+            flex-shrink: 0;
+        }
+
+        .row {
+            border-bottom: 1px solid black;
+            width: 100%;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .row.last {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-size: 8pt;
+            font-weight: bold;
+            position: absolute;
+            top: 2px;
+            left: 4px;
+        }
+
+        .field-value {
+            width: 100%;
+            text-align: center;
+            font-size: 22pt;
+            font-weight: bold;
+            margin-top: 18px;
+            line-height: 1;
+        }
+
+        .cell {
+            position: relative;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        .row-1 {
+            height: 1in;
+        }
+
+        .cell-half {
+            width: 50%;
+            border-right: 1px solid black;
+            font-size: 9pt;
+            padding: 4px;
+        }
+
+        .cell-half:last-child {
+            border-right: none;
+        }
+
+        .addr-text {
+            white-space: pre-wrap;
+            font-weight: normal;
+            line-height: 1.2;
+        }
+
+        .addr-header {
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 8pt;
+        }
+
+        .row-2 {
+            height: 2.2in;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        .text-under-2d {
+            font-size: 9pt;
+            margin-top: 5px;
+            font-family: 'Arial Narrow', sans-serif;
+            word-break: break-all;
+            text-align: center;
+            max-width: 95%;
+        }
+
+        .row-3 {
+            height: 1in;
+            display: block;
+            position: relative;
+        }
+
+        .barcode-1d-wrapper {
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        .row-4 {
+            height: 0.6in;
+            display: block;
+            position: relative;
+        }
+
+        .value-desc {
+            font-size: 16pt;
+            margin-top: 20px;
+        }
+
+        .row-5 {
+            height: 0.9in;
+            display: block;
+            position: relative;
+        }
+
+        .row-6,
+        .row-7,
+        .row-8,
+        .row-9 {
+            height: 0.7in;
+            display: block;
+            position: relative;
+        }
+
+        .eudr-flag {
+            position: absolute;
+            right: 10px;
+            top: 15px;
+            font-size: 18pt;
+            font-weight: normal;
+        }
+
+        .row-10 {
+            height: 1.2in;
+            display: block;
+            position: relative;
+            flex: 1;
+        }
+
+        canvas {
+            max-width: 95%;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================== */
+        @media screen and (max-width: 980px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .control-panel,
+            .preview-area {
+                width: 100%;
+                height: auto;
+            }
+
+            .control-panel {
+                max-height: none;
+            }
+
+            .preview-area {
+                min-height: 650px;
+            }
+        }
+
+        /* =========================
+           PRINT SETTINGS
+        ========================== */
+        @media print {
+            body {
+                background: none;
+                display: block;
+                padding: 0;
+                margin: 0;
+            }
+
+            .control-panel {
+                display: none;
+            }
+
+            .preview-area {
+                display: block;
+                background: none;
+                padding: 0;
+                overflow: visible;
+                border: none;
+                border-radius: 0;
+                height: auto;
+            }
+
+            .empty-state {
+                display: none;
+            }
+
+            .label-container {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+            }
+
+            .label-container:last-child {
+                page-break-after: auto;
+            }
+
+            @page {
+                size: 4in 10in;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="control-panel">
+        <div class="panel-header">
+            <div class="eyebrow">Shipment Label System</div>
+            <h1>Batch Label Generator</h1>
+            <p>ระบบสร้างฉลาก Barcode / DataMatrix สำหรับการจัดส่งสินค้า</p>
+        </div>
+
+        <div class="panel-body">
+
+            <div class="section-card important">
+                <div class="section-title">
+                    <span class="section-number">1</span>
+                    ตั้งค่าการพิมพ์
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        เริ่มจาก Serial Number
+                        <span class="hint">9 หลัก</span>
+                    </label>
+                    <input type="number" id="in_start_serial" value="533803002" placeholder="เช่น 533803001">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        จำนวนที่ต้องการพิมพ์
+                        <span class="hint">สูงสุด 100 ใบ</span>
+                    </label>
+                    <input type="number" id="in_qty" value="1" min="1" max="100">
+                </div>
+
+                <div class="button-row">
+                    <button class="btn btn-generate" onclick="generateBatch()">สร้างฉลาก</button>
+                    <button class="btn btn-print" onclick="window.print()">พิมพ์ทั้งหมด</button>
+                </div>
+
+                <div class="summary-box">
+                    <b>ขนาดฉลาก:</b> 4 x 10 นิ้ว<br>
+                    <b>รูปแบบ:</b> DataMatrix + Code128
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">
+                    <span class="section-number">2</span>
+                    ข้อมูลทั่วไป
+                </div>
+
+                <div class="form-group">
+                    <label>SHIP FROM</label>
+                    <textarea id="in_ship" rows="2">L.T. RUBBER CO.,LTD&#10;THAILAND</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>DESTINATION</label>
+                    <textarea id="in_dest" rows="2">US-ARB PLANT&#10;USA</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>PG + IMP CODE (P)</label>
+                    <input type="text" id="in_pg" value="PG08435AB">
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="in_desc" value="RSS1 SB COLOR CONTROL">
+                </div>
+
+                <div class="form-group">
+                    <label>SMPT LOT NO. (H)</label>
+                    <input type="text" id="in_lot" value="533803">
+                </div>
+
+                <div class="form-group">
+                    <label>NIF CODE (V)</label>
+                    <input type="text" id="in_nif" value="03312">
+                </div>
+
+                <div class="form-group">
+                    <label>Packer</label>
+                    <input type="text" id="in_packer" value="LTR">
+                </div>
+
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="in_date" value="2024-11-25">
+                </div>
+
+                <div class="form-group">
+                    <label>Note</label>
+                    <input type="text" id="in_eudr" value="EUDR">
+                </div>
+
+                <div class="form-group">
+                    <label>Net Weight (KG)</label>
+                    <input type="number" id="in_weight" value="1260">
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-credit">
+            System Developed by<br>
+            <b>J-Attaphon</b><br>
+            IT Professional Specialist
+        </div>
+    </aside>
+
+    <main class="preview-area" id="printableArea">
+        <div class="empty-state">
+            <div class="empty-icon">▦</div>
+            <h2>Label Preview</h2>
+            <p>กดปุ่ม “สร้างฉลาก” เพื่อแสดงตัวอย่างก่อนพิมพ์</p>
+        </div>
+    </main>
+
+    <script>
+        const pad = (num, size) => ('000000000' + num).substr(-size);
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function generateBatch() {
+            let ship = document.getElementById('in_ship').value;
+            let dest = document.getElementById('in_dest').value;
+            let pg = document.getElementById('in_pg').value.toUpperCase().trim();
+            let desc = document.getElementById('in_desc').value.toUpperCase().trim();
+            let lot = document.getElementById('in_lot').value.toUpperCase().trim();
+            let nif = document.getElementById('in_nif').value.toUpperCase().trim();
+            let packer = document.getElementById('in_packer').value.toUpperCase().trim();
+            let dateRaw = document.getElementById('in_date').value;
+            let eudr = document.getElementById('in_eudr').value.toUpperCase().trim();
+            let weightRaw = document.getElementById('in_weight').value;
+
+            let startSerialStr = document.getElementById('in_start_serial').value;
+            let qty = parseInt(document.getElementById('in_qty').value);
+
+            if (!startSerialStr || qty < 1) {
+                alert("กรุณาระบุ Serial เริ่มต้น และจำนวนให้ถูกต้อง");
+                return;
+            }
+
+            if (qty > 100) {
+                alert("จำนวนพิมพ์สูงสุดไม่เกิน 100 ใบต่อครั้ง");
+                return;
+            }
+
+            let startSerial = parseInt(startSerialStr);
+            let container = document.getElementById('printableArea');
+            container.innerHTML = '';
+
+            let dateFmt = "";
+            if (dateRaw) {
+                let d = new Date(dateRaw);
+                let dd = pad(d.getDate(), 2);
+                let mm = pad(d.getMonth() + 1, 2);
+                let yy = d.getFullYear().toString().substr(-2);
+                dateFmt = `${dd}/${mm}/${yy}`;
+            }
+
+            let nifPadded = pad(nif, 5);
+            let weightPadded = pad(weightRaw, 6);
+            let lotSpace = "    ";
+
+            for (let i = 0; i < qty; i++) {
+                let currentSerialNum = startSerial + i;
+                let currentSerialPadded = pad(currentSerialNum, 9);
+
+                let id_2d = `cvs_2d_${i}`;
+                let id_pg = `cvs_pg_${i}`;
+                let id_lot = `cvs_lot_${i}`;
+                let id_serial = `cvs_serial_${i}`;
+
+                let fullString = `${nifPadded}${pg}${currentSerialPadded}${lot}${lotSpace}${weightPadded}${dateFmt}`;
+
+                let labelHTML = `
+                    <div class="label-container">
+                        <div class="row row-1">
+                            <div class="cell-half">
+                                <div class="addr-header">SHIP FROM :</div>
+                                <div class="addr-text">${escapeHtml(ship)}</div>
+                            </div>
+                            <div class="cell-half">
+                                <div class="addr-header">DESTINATION</div>
+                                <div class="addr-text">${escapeHtml(dest)}</div>
+                            </div>
+                        </div>
+
+                        <div class="row row-2">
+                            <canvas id="${id_2d}"></canvas>
+                            <div class="text-under-2d">${escapeHtml(fullString)}</div>
+                        </div>
+
+                        <div class="row row-3 cell">
+                            <div class="field-label">PG + IMP CODE (P)</div>
+                            <div class="field-value">${escapeHtml(pg)}</div>
+                            <div class="barcode-1d-wrapper">
+                                <canvas id="${id_pg}" style="height:40px;"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="row row-4 cell">
+                            <div class="field-label">Production Description</div>
+                            <div class="field-value value-desc">${escapeHtml(desc)}</div>
+                        </div>
+
+                        <div class="row row-5 cell">
+                            <div class="field-label">SMPT LOT NO. (H)</div>
+                            <div class="field-value">${escapeHtml(lot)}</div>
+                            <div class="barcode-1d-wrapper">
+                                <canvas id="${id_lot}" style="height:35px;"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="row row-6 cell">
+                            <div class="field-label">NIF CODE (V)</div>
+                            <div class="field-value">${escapeHtml(nifPadded)}</div>
+                        </div>
+
+                        <div class="row row-7 cell">
+                            <div class="field-label">Packer Code / Packer name</div>
+                            <div class="field-value">${escapeHtml(packer)}</div>
+                        </div>
+
+                        <div class="row row-8 cell">
+                            <div class="field-label">Date Of fabrication (DD/MM/YY)</div>
+                            <div class="field-value">${escapeHtml(dateFmt)}</div>
+                            <div class="eudr-flag">${escapeHtml(eudr)}</div>
+                        </div>
+
+                        <div class="row row-9 cell">
+                            <div class="field-label">Net weight ( Kg )</div>
+                            <div class="field-value">${escapeHtml(weightPadded)}</div>
+                        </div>
+
+                        <div class="row row-10 cell last">
+                            <div class="field-label">Serial Number (S)</div>
+                            <div class="field-value">${escapeHtml(currentSerialPadded)}</div>
+                            <div class="barcode-1d-wrapper">
+                                <canvas id="${id_serial}" style="height:40px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML('beforeend', labelHTML);
+
+                try {
+                    let opts1D = {
+                        bcid: 'code128',
+                        scale: 2,
+                        height: 10,
+                        includetext: false,
+                        textxalign: 'center'
+                    };
+
+                    bwipjs.toCanvas(id_2d, {
+                        bcid: 'datamatrix',
+                        text: fullString,
+                        scale: 4,
+                        includetext: false,
+                        padding: 0
+                    });
+
+                    bwipjs.toCanvas(id_pg, {
+                        ...opts1D,
+                        text: 'P' + pg
+                    });
+
+                    bwipjs.toCanvas(id_lot, {
+                        ...opts1D,
+                        text: 'H' + lot
+                    });
+
+                    bwipjs.toCanvas(id_serial, {
+                        ...opts1D,
+                        text: 'S' + currentSerialPadded
+                    });
+
+                } catch (e) {
+                    console.error("Error rendering label " + i, e);
+                    alert("เกิดข้อผิดพลาดในการสร้าง Barcode กรุณาตรวจสอบข้อมูล");
+                }
+            }
+        }
+
+        window.onload = function () {
+            setTimeout(generateBatch, 500);
+        };
+    </script>
+
+</body>
+</html>
+ 
